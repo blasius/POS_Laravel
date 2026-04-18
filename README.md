@@ -1,2 +1,2 @@
 
-## Martin Logistics platform
+## Point of Sales
