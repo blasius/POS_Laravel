@@ -23,6 +23,7 @@ const router = createRouter({
                     path: "inventory",
                     children: [
                         { path: "products", name: "Products", component: () => import("../pages/Inventory/Products.vue") },
+                        { path: "categories", name: "Categories", component: () => import("../pages/Inventory/Categories.vue") },
                     ]
                 },
                 { path: "settings", name: "Settings", component: () => import("../pages/Settings.vue") },
