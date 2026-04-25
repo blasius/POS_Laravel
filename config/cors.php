@@ -26,8 +26,8 @@ return [
 
     'allowed_origins' => [
         // Your primary Herd/Valet domain
-        'https://martin-logistics.test',
-        'http://martin-logistics.test',
+        'https://pos_laravel.test',
+        'http://pos_laravel.test',
 
         // Vite Dev Server (Standard ports)
         'http://localhost:5173',
@@ -36,7 +36,7 @@ return [
         'https://127.0.0.1:5173',
 
         // The specific Vite host from your .env
-        'https://vite.martin-logistics.test',
+        'https://vite.pos_laravel.test',
         // PRODUCTION
         'https://martin-logistics.nova.bi',
         'https://www.martin-logistics.nova.bi',

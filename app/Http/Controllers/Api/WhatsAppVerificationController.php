@@ -41,7 +41,7 @@ class WhatsAppVerificationController extends Controller
                 "whatsapp:{$contact->value}", // E.164 format number
                 [
                     'from' => config('services.twilio.whatsapp_from'),
-                    'body' => "Your Martin Logistics verification code is {$plainCode}. It expires in 10 minutes.",
+                    'body' => "Your Point of Sales verification code is {$plainCode}. It expires in 10 minutes.",
                 ]
             );
         } catch (\Throwable $e) {

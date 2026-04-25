@@ -2,7 +2,7 @@
 
 @section('content')
     <section class="text-center mb-16">
-        <h1 class="text-3xl font-extrabold text-[#222222] mb-4">About Martin Logistics</h1>
+        <h1 class="text-3xl font-extrabold text-[#222222] mb-4">About Point of Sales</h1>
         <p class="text-lg text-gray-600">
             We are committed to providing reliable logistics services that connect businesses and people across borders.
         </p>

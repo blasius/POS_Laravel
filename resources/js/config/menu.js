@@ -1,18 +1,15 @@
-// resources/js/config/menu.js
-
 import {
     Home,
-    Ticket,
+    ShoppingCart,
+    Package,
+    Users,
+    Receipt,
     BarChart3,
-    Map,
-    User,
-    Car,
-    Route,
-    FileText,
     Settings,
     HelpCircle,
-    Radar,
-    Zap
+    LayoutGrid,
+    Wallet,
+    History
 } from "lucide-vue-next";
 
 export const menu = [
@@ -22,61 +19,45 @@ export const menu = [
         to: "/dashboard",
     },
     {
-        label: "Control Tower",
-        icon: Radar,
-        to: "/control-tower",
+        label: "POS",
+        icon: ShoppingCart,
+        to: "/pos",
     },
     {
-        label: "Dispatch",
-        icon: Zap,
-        to: "/dispatch",
-    },
-    {
-        label: "Compliance",
-        icon: Ticket,
+        label: "Inventory",
+        icon: Package,
         children: [
-            { label: "Summary", to: "/compliance-summary" },
-            { label: "Insurances", to: "/insurances" },
-            { label: "Inspections", to: "/inspections" },
+            { label: "Products", to: "/inventory/products" },
+            { label: "Categories", to: "/inventory/categories" },
+            { label: "Stock Adjustments", to: "/inventory/adjustments" },
         ],
     },
     {
-        label: "Fines",
-        icon: Ticket,
+        label: "Sales",
+        icon: Receipt,
         children: [
-            { label: "List Fines", to: "/fines" },
-            { label: "Analytics", to: "/fines/analytics" },
+            { label: "Sales History", to: "/sales/history" },
+            { label: "Pending Orders", to: "/sales/pending" },
         ],
     },
     {
-        label: "Trips",
-        icon: Map,
-        to: "/trips",
+        label: "Customers",
+        icon: Users,
+        to: "/customers",
     },
     {
-        label: "Drivers",
-        icon: User,
-        to: "/drivers",
-    },
-    {
-        label: "Vehicles",
-        icon: Car,
-        to: "/vehicles",
-    },
-    {
-        label: "Routes",
-        icon: Route,
-        to: "/routes",
-    },
-    {
-        label: "Billing",
-        icon: FileText,
-        to: "/billing",
+        label: "Expenses",
+        icon: Wallet,
+        to: "/expenses",
     },
     {
         label: "Reports",
         icon: BarChart3,
-        to: "/reports",
+        children: [
+            { label: "Revenue", to: "/reports/revenue" },
+            { label: "Inventory Report", to: "/reports/inventory" },
+            { label: "Profit & Loss", to: "/reports/profit-loss" },
+        ],
     },
     {
         label: "Settings",

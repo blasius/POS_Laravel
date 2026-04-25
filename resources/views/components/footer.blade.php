@@ -1,7 +1,7 @@
 <footer class="bg-[#222222] text-white mt-12">
     <div class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
-            <h4 class="text-lg font-bold">Martin Logistics</h4>
+            <h4 class="text-lg font-bold">Point of Sales</h4>
             <p class="text-sm mt-2">
                 Delivering goods with speed and care across borders.
             </p>
@@ -17,11 +17,11 @@
         </div>
         <div>
             <h4 class="text-lg font-bold">Contact Us</h4>
-            <p class="text-sm mt-2">Email: info@martinlogistics.com</p>
+            <p class="text-sm mt-2">Email: contact@pointofsales.com</p>
             <p class="text-sm">Phone: +250 79 123 456</p>
         </div>
     </div>
     <div class="text-center py-4 bg-black text-xs">
-        © {{ date('Y') }} Martin Logistics. All rights reserved.
+        © {{ date('Y') }} Point of Sales. All rights reserved.
     </div>
 </footer>
