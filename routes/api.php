@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -23,6 +24,9 @@ Route::middleware('auth')->group(function () {
 
     // --- POS SaaS Portal Routes ---
     Route::prefix('portal')->group(function () {
+        // Dashboard
+        Route::get('dashboard/summary', [DashboardController::class, 'summary']);
+
         // Categories
         Route::get('categories', [CategoryController::class, 'index']);
         Route::post('categories', [CategoryController::class, 'store']);
