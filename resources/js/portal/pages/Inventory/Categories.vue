@@ -1,166 +1,215 @@
 <template>
-    <div class="p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Categories</h1>
-            <button
-                @click="openModal()"
-                class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition flex items-center gap-2"
-            >
-                <Plus :size="20" />
-                Add Category
-            </button>
+    <div class="h-screen flex flex-col bg-slate-50 overflow-hidden relative">
+        <!-- Transitioning Slide Panel for Add/Edit -->
+        <Transition name="slide">
+            <div v-if="panel.show" class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-[110] border-l border-slate-200 flex flex-col">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                    <div>
+                        <h2 class="font-black text-slate-800 uppercase tracking-tight">
+                            {{ panel.editing ? 'Edit Category' : 'New Category' }}
+                        </h2>
+                        <p class="text-xs font-bold text-indigo-600">Product Classification</p>
+                    </div>
+                    <button @click="closePanel" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                        <X class="w-5 h-5 text-slate-400" />
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Category Name</label>
+                        <input v-model="form.name" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Beverages">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Description</label>
+                        <textarea v-model="form.description" rows="4" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Details about this category..."></textarea>
+                    </div>
+                    <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <input type="checkbox" v-model="form.is_active" id="active_check" class="w-4 h-4 text-indigo-600 rounded">
+                        <label for="active_check" class="text-xs font-black text-slate-600 uppercase">Active for POS</label>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-slate-50 border-t border-slate-100">
+                    <button @click="saveCategory" :disabled="loading" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50">
+                        <Save v-if="!loading" class="w-4 h-4" />
+                        <span v-else class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        {{ panel.editing ? 'Update Category' : 'Create Category' }}
+                    </button>
+                </div>
+            </div>
+        </Transition>
+
+        <!-- Notification Toast -->
+        <Transition name="slide-fade">
+            <div v-if="notification.show" class="fixed bottom-8 right-8 z-[130] flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-xl shadow-2xl border border-slate-700">
+                <Check class="w-4 h-4 text-emerald-400" />
+                <span class="text-sm font-bold">{{ notification.message }}</span>
+            </div>
+        </Transition>
+
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-8 py-4 flex flex-wrap items-center justify-between gap-4 shadow-sm z-10">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-indigo-600 rounded-lg"><LayoutGrid class="w-6 h-6 text-white" /></div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800 uppercase leading-none">Inventory</h1>
+                    <div class="flex items-center gap-3 mt-1.5">
+                        <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Category Management</span>
+                    </div>
+                </div>
+                <div class="relative ml-4">
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input v-model="searchQuery" type="text" placeholder="Filter categories..." class="pl-10 pr-4 py-2 w-64 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-indigo-500" />
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button @click="openAddPanel" class="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
+                    <Plus class="w-4 h-4" /> ADD NEW
+                </button>
+            </div>
+        </header>
+
+        <!-- Table Header -->
+        <div class="px-8 py-3 bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest grid grid-cols-12 gap-4 shadow-lg z-10">
+            <div class="col-span-4">Category Details</div>
+            <div class="col-span-3">Slug</div>
+            <div class="col-span-2 text-center">Status</div>
+            <div class="col-span-3 text-right">Actions</div>
         </div>
 
-        <!-- Categories Table -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="category in categories" :key="category.id">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-gray-900">{{ category.name }}</div>
-                            <div class="text-sm text-gray-500">{{ category.description }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ category.slug }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span :class="`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`">
-                                {{ category.is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button @click="openModal(category)" class="text-teal-600 hover:text-teal-900 mr-3">Edit</button>
-                            <button @click="deleteCategory(category.id)" class="text-red-600 hover:text-red-900">Delete</button>
-                        </td>
-                    </tr>
-                    <tr v-if="categories.length === 0">
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-500">
-                            No categories found. Start by adding one.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+        <!-- Table Content -->
+        <div class="flex-1 overflow-y-auto px-8 py-4 space-y-2 custom-scrollbar">
+            <div v-for="cat in filteredCategories" :key="cat.id" class="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-12 gap-4 items-center hover:border-indigo-300 transition-all group">
+                <div class="col-span-4">
+                    <p class="font-black text-slate-900 uppercase tracking-tighter">{{ cat.name }}</p>
+                    <p class="text-[10px] font-medium text-slate-400 mt-0.5 truncate">{{ cat.description || 'No description provided' }}</p>
+                </div>
+                <div class="col-span-3">
+                    <code class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-600 font-bold">{{ cat.slug }}</code>
+                </div>
+                <div class="col-span-2 text-center">
+                    <span :class="cat.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'" class="text-[8px] font-black px-2 py-1 rounded uppercase">
+                        {{ cat.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                </div>
+                <div class="col-span-3 flex justify-end gap-2">
+                    <button @click="openEditPanel(cat)" class="p-2 hover:bg-indigo-50 text-slate-300 hover:text-indigo-600 rounded-lg transition-colors">
+                        <Edit class="w-4 h-4" />
+                    </button>
+                    <button @click="deleteCategory(cat.id)" class="p-2 hover:bg-rose-50 text-slate-300 hover:text-rose-600 rounded-lg transition-colors">
+                        <Trash2 class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
 
-        <!-- Modal -->
-        <div v-if="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg w-full max-w-md p-6">
-                <h2 class="text-xl font-bold mb-4">{{ editingCategory ? 'Edit Category' : 'Add Category' }}</h2>
-                <form @submit.prevent="saveCategory">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                        <input
-                            v-model="form.name"
-                            type="text"
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-teal-500 focus:border-teal-500"
-                            required
-                        />
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea
-                            v-model="form.description"
-                            class="w-full px-3 py-2 border rounded-lg focus:ring-teal-500 focus:border-teal-500"
-                            rows="3"
-                        ></textarea>
-                    </div>
-                    <div class="mb-6 flex items-center">
-                        <input
-                            v-model="form.is_active"
-                            type="checkbox"
-                            class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                            id="is_active"
-                        />
-                        <label for="is_active" class="ml-2 block text-sm text-gray-900">Active</label>
-                    </div>
-                    <div class="flex justify-end gap-3">
-                        <button
-                            type="button"
-                            @click="isModalOpen = false"
-                            class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
-                        >
-                            {{ editingCategory ? 'Update' : 'Save' }}
-                        </button>
-                    </div>
-                </form>
+            <div v-if="filteredCategories.length === 0" class="flex flex-col items-center justify-center py-20 opacity-40">
+                <LayoutGrid :size="48" class="text-slate-300 mb-4" />
+                <p class="font-black text-slate-400 uppercase text-xs tracking-widest">No categories found</p>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Plus } from 'lucide-vue-next';
-import axios from 'axios';
+import { ref, computed, onMounted, reactive } from 'vue';
+import { api } from "../../../plugins/axios";
+import { Plus, Search, LayoutGrid, Edit, Trash2, X, Save, Check } from 'lucide-vue-next';
 
 const categories = ref([]);
-const isModalOpen = ref(false);
-const editingCategory = ref(null);
-const form = ref({
+const searchQuery = ref('');
+const loading = ref(false);
+const panel = reactive({ show: false, editing: false, currentId: null });
+const notification = reactive({ show: false, message: '' });
+
+const form = reactive({
     name: '',
     description: '',
     is_active: true
 });
 
-const fetchCategories = async () => {
+const loadData = async () => {
     try {
-        const response = await axios.get('/api/portal/categories');
-        categories.value = response.data;
-    } catch (error) {
-        console.error('Error fetching categories:', error);
+        const { data } = await api.get('portal/categories');
+        categories.value = data;
+    } catch (e) {
+        // Error is handled by global interceptor, but we catch to stop execution
     }
 };
 
-const openModal = (category = null) => {
-    if (category) {
-        editingCategory.value = category;
-        form.value = { ...category };
-    } else {
-        editingCategory.value = null;
-        form.value = { name: '', description: '', is_active: true };
-    }
-    isModalOpen.value = true;
+const openAddPanel = () => {
+    panel.editing = false;
+    panel.currentId = null;
+    form.name = '';
+    form.description = '';
+    form.is_active = true;
+    panel.show = true;
+};
+
+const openEditPanel = (cat) => {
+    panel.editing = true;
+    panel.currentId = cat.id;
+    form.name = cat.name;
+    form.description = cat.description;
+    form.is_active = !!cat.is_active;
+    panel.show = true;
+};
+
+const closePanel = () => {
+    panel.show = false;
 };
 
 const saveCategory = async () => {
+    loading.value = true;
     try {
-        if (editingCategory.value) {
-            await axios.put(`/api/portal/categories/${editingCategory.value.id}`, form.value);
+        if (panel.editing) {
+            await api.put(`portal/categories/${panel.currentId}`, form);
+            triggerNotification('Category Updated');
         } else {
-            await axios.post('/api/portal/categories', form.value);
+            await api.post('portal/categories', form);
+            triggerNotification('Category Created');
         }
-        isModalOpen.value = false;
-        fetchCategories();
-    } catch (error) {
-        console.error('Error saving category:', error);
-        alert(error.response?.data?.message || 'Error saving category');
+        closePanel();
+        loadData();
+    } catch (e) {
+        // Validation errors usually
+    } finally {
+        loading.value = false;
     }
 };
 
 const deleteCategory = async (id) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    if (!confirm('Are you sure? This cannot be undone.')) return;
     try {
-        await axios.delete(`/api/portal/categories/${id}`);
-        fetchCategories();
-    } catch (error) {
-        console.error('Error deleting category:', error);
-        alert(error.response?.data?.message || 'Error deleting category');
+        await api.delete(`portal/categories/${id}`);
+        triggerNotification('Category Removed');
+        loadData();
+    } catch (e) {
+        alert(e.response?.data?.message || 'Delete failed');
     }
 };
 
-onMounted(fetchCategories);
+const triggerNotification = (msg) => {
+    notification.message = msg;
+    notification.show = true;
+    setTimeout(() => notification.show = false, 3000);
+};
+
+const filteredCategories = computed(() => {
+    const q = searchQuery.value.toLowerCase();
+    return categories.value.filter(c => c.name.toLowerCase().includes(q));
+});
+
+onMounted(loadData);
 </script>
+
+<style scoped>
+.slide-enter-active, .slide-leave-active { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-enter-from, .slide-leave-to { transform: translateX(100%); }
+
+.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s; }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(20px); opacity: 0; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>
