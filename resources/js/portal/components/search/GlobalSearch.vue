@@ -5,7 +5,7 @@
             <input
                 v-model="query"
                 type="text"
-                placeholder="Search drivers, plates, orders, trips..."
+                placeholder="Search products, customers, invoices..."
                 class="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all text-sm"
                 @keydown.esc="closeSearch"
             />

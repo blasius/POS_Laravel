@@ -26,6 +26,7 @@ const router = createRouter({
                         { path: "categories", name: "Categories", component: () => import("../pages/Inventory/Categories.vue") },
                     ]
                 },
+                { path: "customers", name: "Customers", component: () => import("../pages/Customers/Index.vue") },
                 { path: "settings", name: "Settings", component: () => import("../pages/Settings.vue") },
                 { path: "support", name: "Support", component: () => import("../pages/Support/Index.vue") },
 

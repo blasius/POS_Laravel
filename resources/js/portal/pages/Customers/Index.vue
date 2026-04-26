@@ -1,0 +1,222 @@
+<template>
+    <div class="h-screen flex flex-col bg-slate-50 overflow-hidden relative">
+        <!-- Slide Panel for Add/Edit -->
+        <Transition name="slide">
+            <div v-if="panel.show" class="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-[110] border-l border-slate-200 flex flex-col">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                    <div>
+                        <h2 class="font-black text-slate-800 uppercase tracking-tight">
+                            {{ panel.editing ? 'Edit Customer' : 'New Customer' }}
+                        </h2>
+                        <p class="text-xs font-bold text-indigo-600">Client Relations</p>
+                    </div>
+                    <button @click="closePanel" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                        <X class="w-5 h-5 text-slate-400" />
+                    </button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Full Name</label>
+                        <input v-model="form.name" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. John Doe">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Email Address</label>
+                        <input v-model="form.email" type="email" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="john@example.com">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Phone Number</label>
+                        <input v-model="form.phone" type="text" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="+123456789">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Address</label>
+                        <textarea v-model="form.address" rows="3" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Physical address..."></textarea>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-slate-50 border-t border-slate-100">
+                    <button @click="saveCustomer" :disabled="loading" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50">
+                        <Save v-if="!loading" class="w-4 h-4" />
+                        <span v-else class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        {{ panel.editing ? 'Update Customer' : 'Create Customer' }}
+                    </button>
+                </div>
+            </div>
+        </Transition>
+
+        <!-- Notification Toast -->
+        <Transition name="slide-fade">
+            <div v-if="notification.show" class="fixed bottom-8 right-8 z-[130] flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-xl shadow-2xl border border-slate-700">
+                <Check class="w-4 h-4 text-emerald-400" />
+                <span class="text-sm font-bold">{{ notification.message }}</span>
+            </div>
+        </Transition>
+
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-8 py-4 flex flex-wrap items-center justify-between gap-4 shadow-sm z-10">
+            <div class="flex items-center gap-4">
+                <div class="p-2 bg-indigo-600 rounded-lg"><Users class="w-6 h-6 text-white" /></div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800 uppercase leading-none">CRM</h1>
+                    <div class="flex items-center gap-3 mt-1.5">
+                        <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Customer Directory</span>
+                    </div>
+                </div>
+                <div class="relative ml-4">
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input v-model="searchQuery" type="text" placeholder="Search customers..." class="pl-10 pr-4 py-2 w-64 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-indigo-500" />
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button @click="openAddPanel" class="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-xs font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all">
+                    <Plus class="w-4 h-4" /> ADD CUSTOMER
+                </button>
+            </div>
+        </header>
+
+        <!-- Table Header -->
+        <div class="px-8 py-3 bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest grid grid-cols-12 gap-4 shadow-lg z-10">
+            <div class="col-span-4">Customer Details</div>
+            <div class="col-span-3">Contact</div>
+            <div class="col-span-2 text-center">Total Spent</div>
+            <div class="col-span-3 text-right">Actions</div>
+        </div>
+
+        <!-- Table Content -->
+        <div class="flex-1 overflow-y-auto px-8 py-4 space-y-2 custom-scrollbar">
+            <div v-for="cust in filteredCustomers" :key="cust.id" class="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-12 gap-4 items-center hover:border-indigo-300 transition-all group">
+                <div class="col-span-4">
+                    <p class="font-black text-slate-900 uppercase tracking-tighter">{{ cust.name }}</p>
+                    <p class="text-[10px] font-medium text-slate-400 mt-0.5 truncate">{{ cust.address || 'No address provided' }}</p>
+                </div>
+                <div class="col-span-3">
+                    <div class="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase">
+                        <Mail class="w-3 h-3" /> {{ cust.email || '---' }}
+                    </div>
+                    <div class="flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase mt-1">
+                        <Phone class="w-3 h-3" /> {{ cust.phone || '---' }}
+                    </div>
+                </div>
+                <div class="col-span-2 text-center">
+                    <span class="text-[10px] font-black px-2 py-1 rounded uppercase bg-emerald-50 text-emerald-700">
+                        ${{ parseFloat(cust.total_spent).toFixed(2) }}
+                    </span>
+                </div>
+                <div class="col-span-3 flex justify-end gap-2">
+                    <button @click="openEditPanel(cust)" class="p-2 hover:bg-indigo-50 text-slate-300 hover:text-indigo-600 rounded-lg transition-colors">
+                        <Edit class="w-4 h-4" />
+                    </button>
+                    <button @click="deleteCustomer(cust.id)" class="p-2 hover:bg-rose-50 text-slate-300 hover:text-rose-600 rounded-lg transition-colors">
+                        <Trash2 class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+
+            <div v-if="filteredCustomers.length === 0" class="flex flex-col items-center justify-center py-20 opacity-40">
+                <Users :size="48" class="text-slate-300 mb-4" />
+                <p class="font-black text-slate-400 uppercase text-xs tracking-widest">No customers registered</p>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, reactive } from 'vue';
+import { api } from "../../../plugins/axios";
+import { Plus, Search, Users, Edit, Trash2, X, Save, Check, Mail, Phone } from 'lucide-vue-next';
+
+const customers = ref([]);
+const searchQuery = ref('');
+const loading = ref(false);
+const panel = reactive({ show: false, editing: false, currentId: null });
+const notification = reactive({ show: false, message: '' });
+
+const form = reactive({
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+});
+
+const loadData = async () => {
+    try {
+        const { data } = await api.get('portal/customers');
+        customers.value = data;
+    } catch (e) {}
+};
+
+const openAddPanel = () => {
+    panel.editing = false;
+    panel.currentId = null;
+    form.name = ''; form.email = ''; form.phone = ''; form.address = '';
+    panel.show = true;
+};
+
+const openEditPanel = (cust) => {
+    panel.editing = true;
+    panel.currentId = cust.id;
+    form.name = cust.name;
+    form.email = cust.email;
+    form.phone = cust.phone;
+    form.address = cust.address;
+    panel.show = true;
+};
+
+const closePanel = () => { panel.show = false; };
+
+const saveCustomer = async () => {
+    loading.value = true;
+    try {
+        if (panel.editing) {
+            await api.put(`portal/customers/${panel.currentId}`, form);
+            triggerNotification('Customer Updated');
+        } else {
+            await api.post('portal/customers', form);
+            triggerNotification('Customer Registered');
+        }
+        closePanel();
+        loadData();
+    } catch (e) {
+        alert(e.response?.data?.message || 'Action failed');
+    } finally {
+        loading.value = false;
+    }
+};
+
+const deleteCustomer = async (id) => {
+    if (!confirm('Permanently remove this customer?')) return;
+    try {
+        await api.delete(`portal/customers/${id}`);
+        triggerNotification('Customer Deleted');
+        loadData();
+    } catch (e) {
+        alert(e.response?.data?.message || 'Delete failed');
+    }
+};
+
+const triggerNotification = (msg) => {
+    notification.message = msg;
+    notification.show = true;
+    setTimeout(() => notification.show = false, 3000);
+};
+
+const filteredCustomers = computed(() => {
+    const q = searchQuery.value.toLowerCase();
+    return customers.value.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        (c.email && c.email.toLowerCase().includes(q)) ||
+        (c.phone && c.phone.toLowerCase().includes(q))
+    );
+});
+
+onMounted(loadData);
+</script>
+
+<style scoped>
+.slide-enter-active, .slide-leave-active { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.slide-enter-from, .slide-leave-to { transform: translateX(100%); }
+.slide-fade-enter-active, .slide-fade-leave-active { transition: all 0.3s; }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(20px); opacity: 0; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>

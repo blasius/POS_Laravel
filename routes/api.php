@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\CustomerController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -34,5 +35,12 @@ Route::middleware('auth')->group(function () {
         Route::get('products/{product}', [ProductController::class, 'show']);
         Route::put('products/{product}', [ProductController::class, 'update']);
         Route::delete('products/{product}', [ProductController::class, 'destroy']);
+
+        // Customers
+        Route::get('customers', [CustomerController::class, 'index']);
+        Route::post('customers', [CustomerController::class, 'store']);
+        Route::get('customers/{customer}', [CustomerController::class, 'show']);
+        Route::put('customers/{customer}', [CustomerController::class, 'update']);
+        Route::delete('customers/{customer}', [CustomerController::class, 'destroy']);
     });
 });
